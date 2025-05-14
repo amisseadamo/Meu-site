@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suporte AgroVendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="estilo.css">
+    <style>
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fff;
+        }
+        .message {
+            margin-bottom: 15px;
+        }
+        .message.client {
+            text-align: right;
+        }
+        .message.support {
+            text-align: left;
+        }
+        .message .badge {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #28a745;">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">AgroVendas</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#endereco">Endereço: Maputo, Moçambique</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contatos">Contato: +258 84 123 4567</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="mailto:contato@agrovendas.com">Email: contato@agrovendas.com</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="http://www.agrovendas.com" target="_blank">Site: www.agrovendas.com</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-light btn-sm ms-2" href="chat.html">Chat de Suporte</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5">
+        <h1 class="text-center text-white mb-4">Suporte AgroVendas</h1>
+        <p class="text-center text-white mb-4">Fale com nossa equipe para dúvidas ou pedidos!</p>
+        <div class="text-center mb-4">
+            <a href="index.html" class="btn btn-danger btn-custom">Sair</a>
+        </div>
+
+        <h3 class="text-center text-white mb-3">Chat de Suporte</h3>
+        <div class="chat-box" id="chatBox">
+            <!-- Mensagens serão adicionadas aqui dinamicamente -->
+        </div>
+
+        <div class="input-group mt-3">
+            <input type="text" class="form-control input-custom" id="userInput" placeholder="Escreva sua dúvida ou pedido...">
+            <button class="btn btn-primary btn-custom" onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const products = {
+            "milho": { name: "Milho Orgânico", price: "MZN 5,00/kg" },
+            "feijão": { name: "Feijão Carioca", price: "MZN 8,00/kg" },
+            "tomate": { name: "Tomate Orgânico", price: "MZN 6,00/kg" }
+        };
+        let conversationState = 0; // 0: início (espera saudação), 1: após saudação (sugere produtos), 2: após sugestão (direciona ao gerente)
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addMessage(sender, message, time) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `
+                <strong>${sender === 'client' ? 'Você' : 'AgroVendas'} (${time})</strong>
+                <p>${message}</p>
+            `;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim().toLowerCase();
+            if (!message) return;
+
+            const time = getCurrentTime();
+            addMessage('client', message, time);
+            userInput.value = '';
+
+            setTimeout(() => {
+                let response = "Peço desculpas, mas não consigo responder a essa questão. Por favor, entre em contato com meu gerente para mais assistência.";
+
+                if (conversationState === 0) {
+                    // Normalizar mensagem para remover acentos e facilitar comparação
+                    const normalizedMessage = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    if (normalizedMessage.includes('ola') || normalizedMessage.includes('oi') || message.match(/^(bom dia|boa tarde)/)) {
+                        response = "Olá! Bem-vindo ao Suporte AgroVendas. Como posso ajudar você hoje?";
+                        conversationState = 1; // Avança para o estado de sugerir produtos
+                    }
+                } else if (conversationState === 1) {
+                    response = "Temos Milho Orgânico, Feijão Carioca e Tomate Orgânico disponíveis esta semana! Deseja saber mais sobre algum desses produtos?";
+                    conversationState = 2; // Avança para o estado de direcionar ao gerente
+                }
+
+                addMessage('support', response, time);
+            }, 1000);
+        }
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+
+    <footer class="footer mt-5">
+        <p>© 2025 - AgroVendas | <a href="index.html">Voltar à Loja</a></p>
+    </footer>
+</body>
+</html>
