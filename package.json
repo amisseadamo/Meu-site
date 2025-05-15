@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amisseadamo/Meu-site.git"
+    "url": "https://github.com/amisseadamo/Meu-site.git"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,6 @@
   },
   "homepage": "https://github.com/amisseadamo/Meu-site#readme",
   "dependencies": {
-    "express": "^5.1.0",
-    "serve": "^14.2.4"
+    "express": "^4.21.2"
   }
 }
