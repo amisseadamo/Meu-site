@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AgroVendas static website",
   "scripts": {
-    "start": "serve -s .",
+    "start": "node_modules/.bin/serve -s .",
     "build": "echo 'No build step required for static site'"
   },
   "repository": {
