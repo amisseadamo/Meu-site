@@ -1,8 +1,23 @@
 {
-  "name": "my-site",
+  "name": "projeto-pagina-web",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "description": "AgroVendas static website",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "serve -s .",
+    "build": "echo 'No build step required for static site'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amisseadamo/Meu-site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amisseadamo/Meu-site/issues"
+  },
+  "homepage": "https://github.com/amisseadamo/Meu-site#readme",
+  "dependencies": {
+    "serve": "^14.2.3"
   }
 }
