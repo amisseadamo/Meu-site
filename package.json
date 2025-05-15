@@ -1,12 +1,8 @@
 {
-  "name": "projeto-pagina-web",
+  "name": "my-site",
   "version": "1.0.0",
-  "main": "src/server.js",  // Adjust to your entry point
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js"  // Adjust to your entry point
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "ws": "^8.13.0"  // For WebSocket
+    "start": "node src/server.js"
   }
 }
