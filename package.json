@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "AgroVendas static website",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "build": "echo \"Nada para compilar\""
   },
   "repository": {
     "type": "git",
