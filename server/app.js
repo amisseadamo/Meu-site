@@ -16,7 +16,7 @@ const routes = require('./routes');
 // Configura armazenamento de uploads
 const upload = multer({
   dest: path.join(__dirname, '../public/uploads'),
-  limits: { fileSize: 20 * 1024 * 1024 }, // Limite de 20MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5MB
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -37,7 +37,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Middleware de autenticação
 async function authMiddleware(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1];
+  const token = req.headers['authorization']?.split(' ')[1] || req.query.token;
   console.log('Verificando token:', token ? 'Token presente' : 'Token ausente');
   if (!token) {
     console.log('Redirecionando para login.html: sem token');
@@ -79,16 +79,34 @@ app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
-// Rota para login.html
+// Rota para login.html (pública)
 app.get('/login.html', (req, res) => {
   console.log('Servindo login.html');
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
-// Rota para admin.html (protegida)
+// Rota para register.html (pública)
+app.get('/register.html', (req, res) => {
+  console.log('Servindo register.html');
+  res.sendFile(path.join(__dirname, '../public/register.html'));
+});
+
+// Rota para index.html (protegida)
+app.get('/index.html', authMiddleware, (req, res) => {
+  console.log('Servindo index.html para:', req.user.email);
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Rota para admin.html (protegida, apenas admin)
 app.get('/admin.html', authMiddleware, adminMiddleware, (req, res) => {
   console.log('Servindo admin.html para:', req.user.email);
   res.sendFile(path.join(__dirname, '../public/admin.html'));
+});
+
+// Rota para payment.html (protegida)
+app.get('/payment.html', authMiddleware, (req, res) => {
+  console.log('Servindo payment.html');
+  res.sendFile(path.join(__dirname, '../public/payment.html'));
 });
 
 // Usa as rotas definidas em routes.js

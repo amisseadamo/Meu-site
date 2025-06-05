@@ -24,6 +24,7 @@ const upload = multer({
 // Caminho para os arquivos JSON
 const usersFilePath = path.join(__dirname, 'users.json');
 const productsFilePath = path.join(__dirname, 'products.json');
+const ordersFilePath = path.join(__dirname, 'orders.json');
 
 // Função para ler usuários
 async function readUsers() {
@@ -72,6 +73,31 @@ async function writeProducts(products) {
     console.log('Arquivo products.json atualizado com sucesso.');
   } catch (error) {
     throw new Error(`Erro ao escrever em products.json: ${error.message}`);
+  }
+}
+
+// Função para ler pedidos
+async function readOrders() {
+  try {
+    const data = await fs.readFile(ordersFilePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('Arquivo orders.json não encontrado, criando novo.');
+      await fs.writeFile(ordersFilePath, '[]');
+      return [];
+    }
+    throw new Error(`Erro ao ler orders.json: ${error.message}`);
+  }
+}
+
+// Função para escrever pedidos
+async function writeOrders(orders) {
+  try {
+    await fs.writeFile(ordersFilePath, JSON.stringify(orders, null, 2));
+    console.log('Arquivo orders.json atualizado com sucesso.');
+  } catch (error) {
+    throw new Error(`Erro ao escrever em orders.json: ${error.message}`);
   }
 }
 
@@ -216,6 +242,48 @@ router.delete('/products/:id', async (req, res) => {
   } catch (error) {
     console.error('Erro ao remover produto:', error.message);
     res.status(500).json({ message: 'Erro ao remover produto.' });
+  }
+});
+
+// Rotas de Pedidos
+router.post('/orders', async (req, res) => {
+  console.log('Requisição recebida em /api/orders POST:', req.body);
+  const { productId, productName, price, quantity, paymentMethod } = req.body;
+  if (!productId || !productName || !price || !quantity || !paymentMethod) {
+    console.log('Campos obrigatórios ausentes:', { productId, productName, price, quantity, paymentMethod });
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  try {
+    const orders = await readOrders();
+    const newOrder = {
+      id: orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1,
+      productId: parseInt(productId),
+      productName,
+      price: parseFloat(price),
+      quantity: parseInt(quantity),
+      paymentMethod,
+      timestamp: new Date().toISOString()
+    };
+    orders.push(newOrder);
+    await writeOrders(orders);
+    console.log('Pedido registrado:', newOrder);
+    res.status(200).json({ message: 'Order placed successfully! Awaiting delivery in 1 week.' });
+  } catch (error) {
+    console.error('Erro ao registrar pedido:', error.message);
+    res.status(500).json({ message: 'Erro ao registrar pedido: ' + error.message });
+  }
+});
+
+router.get('/orders', async (req, res) => {
+  console.log('Requisição recebida em /api/orders');
+  try {
+    const orders = await readOrders();
+    console.log('Pedidos retornados:', orders);
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Erro ao ler pedidos:', error.message);
+    res.status(500).json({ message: 'Erro ao buscar pedidos.' });
   }
 });
 

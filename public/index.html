@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroVendas - Produtos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-custom">
@@ -22,11 +22,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/chat.html">Chat de Suporte</a>
                     </li>
+                    
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin.html">Admin</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login.html">Login</a>
+                        <a class="nav-link" href="#" onclick="logout()">Sair</a>
                     </li>
                 </ul>
             </div>
@@ -38,12 +36,47 @@
         <div id="products-grid" class="row row-cols-1 row-cols-md-3 g-4"></div>
     </div>
 
+    <!-- Modal do Carrinho -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">Carrinho de Compras</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cart-items"></div>
+                    <p id="cart-total">Total: 0.00 MZN</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="proceed-to-payment">Ir para Pagamento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
-        <p>&copy; 2025 - AgroVendas</p>
+        <p>© 2025 - AgroVendas</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@1.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let cart = [];
+
+        // Verificar autenticação
+        if (!localStorage.getItem('token')) {
+            console.log('Sem token, redirecionando para login.html');
+            window.location.href = '/login.html';
+        }
+
+        // Função de logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('cart');
+            window.location.href = '/login.html';
+        }
+
         // Função para exibir mensagens de alerta
         function showAlert(message, type) {
             const alertContainer = document.createElement('div');
@@ -56,11 +89,13 @@
             setTimeout(() => alertContainer.remove(), 5000);
         }
 
-        // Função para load produtos
+        // Carregar produtos
         async function loadProducts() {
             console.log('Carregando produtos via AJAX para index.html...');
             try {
-                const response = await fetch('/api/products');
+                const response = await fetch('/api/products', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
                 if (!response.ok) {
                     throw new Error(`Erro ${response.status}: ${await response.text()}`);
                 }
@@ -73,10 +108,11 @@
                     cardDiv.className = 'col';
                     cardDiv.innerHTML = `
                         <div class="card h-100">
-                            <img src="${product.image || '/placeholder.png'}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="${product.name}" onerror="this.src='/placeholder.png'; this.alt='Imagem não disponível';">
+                            <img src="${product.image ? `http://localhost:3000${product.image}` : '/placeholder.png'}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="${product.name}" onerror="this.src='/placeholder.png'; this.alt='Imagem não disponível';">
                             <div class="card-body">
                                 <h5 class="card-title">${product.name}</h5>
                                 <p class="card-text">Preço: ${product.price.toFixed(2)} MZN/kg</p>
+                                <button class="btn btn-primary" onclick="addToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.image ? `http://localhost:3000${product.image}` : '/placeholder.png'}')">Adicionar ao Carrinho</button>
                             </div>
                         </div>
                     `;
@@ -87,6 +123,51 @@
                 showAlert('Erro ao carregar produtos: ' + error.message, 'danger');
             }
         }
+
+        // Adicionar ao carrinho
+        function addToCart(id, name, price, image) {
+            console.log('Adicionando ao carrinho:', { id, name, price, image });
+            cart = [{ id, name, price, image, quantity: 1 }]; // Apenas um produto
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartModal();
+            showAlert(`${name} adicionado ao carrinho!`, 'success');
+            new bootstrap.Modal(document.getElementById('cartModal')).show();
+        }
+
+        // Atualizar modal do carrinho
+        function updateCartModal() {
+            console.log('Atualizando modal do carrinho:', cart);
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            cartItems.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                const itemDiv = document.createElement('div');
+                itemDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/placeholder.png';">
+                            <span>${item.name} - ${item.quantity} kg</span>
+                        </div>
+                        <span>${(item.price * item.quantity).toFixed(2)} MZN</span>
+                    </div>
+                `;
+                cartItems.appendChild(itemDiv);
+            });
+            cartTotal.textContent = `Total: ${total.toFixed(2)} MZN`;
+        }
+
+        // Ir para pagamento
+        document.getElementById('proceed-to-payment').addEventListener('click', () => {
+            console.log('Indo para página de pagamento com carrinho:', cart);
+            if (cart.length > 0) {
+                localStorage.setItem('cart', JSON.stringify(cart));
+                window.location.href = '/payment.html';
+            } else {
+                showAlert('Carrinho vazio!', 'warning');
+            }
+        });
 
         // Inicializar página
         console.log('Inicializando index.html...');

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "productId": 2,
+    "productName": "Feijão Carioca",
+    "price": 8,
+    "quantity": 1,
+    "paymentMethod": "M-Pesa",
+    "timestamp": "2025-06-05T15:57:23.134Z"
+  },
+  {
+    "id": 2,
+    "productId": 2,
+    "productName": "Feijão Carioca",
+    "price": 8,
+    "quantity": 1,
+    "paymentMethod": "M-Pesa",
+    "timestamp": "2025-06-05T16:20:06.779Z"
+  }
+]
