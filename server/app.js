@@ -33,7 +33,7 @@ const upload = multer({
 app.use(express.json());
 
 // Configura pasta public para arquivos estáticos
-app.use(express.static(path.join(__dirname, '../public1')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Middleware de autenticação
 async function authMiddleware(req, res, next) {
@@ -82,13 +82,13 @@ app.get('/', (req, res) => {
 // Rota para login.html
 app.get('/login.html', (req, res) => {
   console.log('Servindo login.html');
-  res.sendFile(path.join(__dirname, '../public1/login.html'));
+  res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
 // Rota para admin.html (protegida)
 app.get('/admin.html', authMiddleware, adminMiddleware, (req, res) => {
   console.log('Servindo admin.html para:', req.user.email);
-  res.sendFile(path.join(__dirname, '../public1/admin.html'));
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
 });
 
 // Usa as rotas definidas em routes.js
