@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Admin",
+    "email": "admin@agrovendas.com",
+    "password": "admin123",
+    "isAdmin": true
+  },
+  {
+    "name": "tobias",
+    "email": "exemplo@gmail.com",
+    "password": "1234",
+    "isAdmin": false
+  }
+]

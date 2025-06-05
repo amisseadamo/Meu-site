@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Milho Orgânico",
+    "price": 5,
+    "image": "/uploads/49c74494be86ff3d32dc624df5f99553"
+  },
+  {
+    "id": 2,
+    "name": "Feijão Carioca",
+    "price": 8,
+    "image": "/uploads/9fbce1b73288d0f1c5fd70c460d96aec"
+  },
+  {
+    "id": 3,
+    "name": "Tomate Orgânico",
+    "price": 6,
+    "image": "/uploads/567ba48a19677c709ef52afe57040694"
+  }
+]
