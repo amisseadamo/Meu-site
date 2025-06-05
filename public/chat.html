@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat de Suporte - AgroVendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="estilo.css">
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="form-heading text-center mt-5">Chat de Suporte</h1>
+        <div class="info-container">
+            <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;"></div>
+            <form id="chat-form">
+                <div class="mb-3">
+                    <label for="chat-message" class="form-label">Mensagem</label>
+                    <input type="text" class="form-control input-custom" id="chat-message" required>
+                </div>
+                <button type="submit" class="btn btn-custom">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const socket = io();
+
+        // Função para obter informações do usuário (simulando login)
+        const user = JSON.parse(localStorage.getItem('user')) || { name: 'Anônimo', email: 'anonimo@exemplo.com' };
+        socket.emit('register-user', user);
+
+        socket.on('receive-message', ({ from, message, timestamp }) => {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            const formattedTime = new Date(timestamp).toLocaleTimeString();
+            messageElement.textContent = `[${formattedTime}] ${from}: ${message}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = document.getElementById('chat-message').value;
+            if (message) {
+                socket.emit('user-message', { message });
+                document.getElementById('chat-message').value = '';
+            }
+        });
+    </script>
+</body>
+</html>

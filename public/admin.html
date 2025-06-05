@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - AgroVendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="estilo.css">
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/index.html">AgroVendas</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/chat.html">Chat de Suporte</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin.html">Admin</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login.html" onclick="logout()">Sair</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="form-heading text-center mt-5">Painel de Administração - AgroVendas</h1>
+        <div id="welcome-message" class="text-center mb-4"></div>
+        <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="products-tab" data-bs-toggle="tab" href="#products" role="tab">Gerenciar Produtos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="chat-tab" data-bs-toggle="tab" href="#chat" role="tab">Chat em Tempo Real</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="users-tab" data-bs-toggle="tab" href="#users" role="tab">Usuários Online</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="admins-tab" data-bs-toggle="tab" href="#admins" role="tab">Gerenciar Administradores</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Gerenciamento de Produtos -->
+            <div class="tab-pane fade show active" id="products" role="tabpanel">
+                <div class="info-container">
+                    <h5>Gerenciar Produtos</h5>
+                    <form id="product-form" class="mb-4">
+                        <input type="hidden" id="product-id">
+                        <div class="mb-3">
+                            <label for="product-name" class="form-label">Nome do Produto</label>
+                            <input type="text" class="form-control input-custom" id="product-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-price" class="form-label">Preço (MZN/kg)</label>
+                            <input type="number" step="0.01" class="form-control input-custom" id="product-price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-image" class="form-label">Imagem do Produto (JPEG, PNG, GIF)</label>
+                            <input type="file" class="form-control input-custom" id="product-image" accept="image/jpeg,image/png,image/gif">
+                        </div>
+                        <button type="submit" class="btn btn-custom">Salvar Produto</button>
+                        <button type="button" class="btn btn-secondary" id="clear-product-form">Limpar</button>
+                    </form>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Preço (MZN/kg)</th>
+                                <th>Imagem</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chat em Tempo Real -->
+            <div class="tab-pane fade" id="chat" role="tabpanel">
+                <div class="info-container">
+                    <h5>Chat em Tempo Real</h5>
+                    <div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;"></div>
+                    <form id="chat-form">
+                        <div class="mb-3">
+                            <label for="chat-user" class="form-label">Enviar para:</label>
+                            <select id="chat-user" class="form-control input-custom" required>
+                                <option value="">Selecione um usuário</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="chat-message" class="form-label">Mensagem</label>
+                            <input type="text" class="form-control input-custom" id="chat-message" required>
+                        </div>
+                        <button type="submit" class="btn btn-custom">Enviar</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Usuários Online -->
+            <div class="tab-pane fade" id="users" role="tabpanel">
+                <div class="info-container">
+                    <h5>Usuários Online</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="online-users-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gerenciamento de Administradores -->
+            <div class="tab-pane fade" id="admins" role="tabpanel">
+                <div class="info-container">
+                    <h5>Gerenciar Administradores</h5>
+                    <form id="admin-form" class="mb-4">
+                        <input type="hidden" id="admin-email">
+                        <div class="mb-3">
+                            <label for="admin-name" class="form-label">Nome</label>
+                            <input type="text" class="form-control input-custom" id="admin-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="admin-email-input" class="form-label">Email</label>
+                            <input type="email" class="form-control input-custom" id="admin-email-input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="admin-password" class="form-label">Senha</label>
+                            <input type="password" class="form-control input-custom" id="admin-password" placeholder="Deixe em branco para manter a senha atual">
+                        </div>
+                        <button type="submit" class="btn btn-custom">Salvar Administrador</button>
+                        <button type="button" class="btn btn-secondary" id="clear-admin-form">Limpar</button>
+                    </form>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admins-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2025 - AgroVendas</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const socket = io();
+        const token = localStorage.getItem('token');
+
+        // Função para exibir mensagens de alerta
+        function showAlert(message, type) {
+            const alertContainer = document.createElement('div');
+            alertContainer.className = `alert alert-${type} alert-custom`;
+            alertContainer.textContent = message;
+            document.querySelector('.container').prepend(alertContainer);
+            setTimeout(() => alertContainer.remove(), 5000);
+        }
+
+        // Função de logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
+
+        // Carregar mensagem de boas-vindas
+        function loadWelcomeMessage() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.name) {
+                    console.log('Exibindo mensagem de boas-vindas para:', user.name);
+                    document.getElementById('welcome-message').textContent = `Bem-vindo, ${user.name}!`;
+                } else {
+                    console.log('Usuário não encontrado no localStorage, redirecionando para login');
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagem de boas-vindas:', error);
+                showAlert('Erro ao carregar dados do usuário.', 'danger');
+                setTimeout(() => window.location.href = '/login.html', 2000);
+            }
+        }
+
+        // Registrar como administrador
+        socket.emit('join-admin');
+
+        // Gerenciamento de Produtos
+        async function loadProducts() {
+            console.log('Carregando produtos via AJAX...');
+            try {
+                const response = await fetch('/api/products', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+                const products = await response.json();
+                console.log('Produtos carregados:', products);
+                const tableBody = document.getElementById('products-table');
+                tableBody.innerHTML = '';
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.id}</td>
+                        <td>${product.name}</td>
+                        <td>${product.price.toFixed(2)}</td>
+                        <td>${product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/placeholder.jpg'; this.alt='Imagem não encontrada';">` : 'Sem imagem'}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editProduct(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price})">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Excluir</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+                showAlert('Erro ao carregar produtos: ' + error.message, 'danger');
+            }
+        }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Submetendo formulário de produto via AJAX...');
+            const id = document.getElementById('product-id').value;
+            const name = document.getElementById('product-name').value;
+            const price = document.getElementById('product-price').value;
+            const image = document.getElementById('product-image').files[0];
+
+            if (!name || !price) {
+                showAlert('Nome e preço são obrigatórios.', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            if (image) {
+                console.log('Imagem selecionada:', image.name);
+                formData.append('image', image);
+            } else {
+                console.log('Nenhuma imagem selecionada.');
+            }
+
+            try {
+                const url = id ? `/api/products/${id}` : '/api/products';
+                const method = id ? 'PUT' : 'POST';
+                console.log('Enviando requisição para:', url, method);
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await response.json();
+                console.log('Resposta do servidor:', data);
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    document.getElementById('product-form').reset();
+                    document.getElementById('product-id').value = '';
+                    loadProducts();
+                } else {
+                    showAlert(data.message || 'Erro ao salvar produto.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar produto:', error);
+                showAlert('Erro ao salvar produto: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('clear-product-form').addEventListener('click', () => {
+            console.log('Limpando formulário de produto');
+            document.getElementById('product-form').reset();
+            document.getElementById('product-id').value = '';
+        });
+
+        function editProduct(id, name, price) {
+            console.log('Editando produto:', { id, name, price });
+            document.getElementById('product-id').value = id;
+            document.getElementById('product-name').value = name;
+            document.getElementById('product-price').value = price;
+            document.getElementById('product-image').value = '';
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                console.log('Excluindo produto via AJAX:', id);
+                try {
+                    const response = await fetch(`/api/products/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    console.log('Resposta do servidor:', data);
+                    if (response.ok) {
+                        showAlert(data.message, 'success');
+                        loadProducts();
+                    } else {
+                        showAlert(data.message || 'Erro ao excluir produto.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir produto:', error);
+                    showAlert('Erro ao excluir produto: ' + error.message, 'danger');
+                }
+            }
+        }
+
+        // Gerenciamento de Administradores
+        async function loadAdmins() {
+            console.log('Carregando administradores via AJAX...');
+            try {
+                const response = await fetch('/api/admins', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${await response.text()}`);
+                }
+                const admins = await response.json();
+                console.log('Administradores carregados:', admins);
+                const tableBody = document.getElementById('admins-table');
+                tableBody.innerHTML = '';
+                admins.forEach(admin => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${admin.name}</td>
+                        <td>${admin.email}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="editAdmin('${admin.email}', '${admin.name.replace(/'/g, "\\'")}')">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAdmin('${admin.email}')">Excluir</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar administradores:', error);
+                showAlert('Erro ao carregar administradores: ' + error.message, 'danger');
+            }
+        }
+
+        document.getElementById('admin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Submetendo formulário de administrador via AJAX...');
+            const email = document.getElementById('admin-email').value || document.getElementById('admin-email-input').value;
+            const name = document.getElementById('admin-name').value;
+            const password = document.getElementById('admin-password').value;
+
+            if (!name || (!email && !document.getElementById('admin-email').value)) {
+                showAlert('Nome e email são obrigatórios.', 'warning');
+                return;
+            }
+
+            try {
+                const url = email ? `/api/admins/${email}` : '/api/admins';
+                const method = email ? 'PUT' : 'POST';
+                const body = password ? { name, password } : { name };
+                if (!email) {
+                    body.email = document.getElementById('admin-email-input').value;
+                }
+                console.log('Enviando requisição para:', url, method, body);
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                console.log('Resposta do servidor:', data);
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    document.getElementById('admin-form').reset();
+                    document.getElementById('admin-email').value = '';
+                    document.getElementById('admin-email-input').value = '';
+                    loadAdmins();
+                } else {
+                    showAlert(data.message || 'Erro ao salvar administrador.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar administrador:', error);
+                showAlert('Erro ao salvar administrador: ' + error.message, 'danger');
+            }
+        });
+
+        document.getElementById('clear-admin-form').addEventListener('click', () => {
+            console.log('Limpando formulário de administrador');
+            document.getElementById('admin-form').reset();
+            document.getElementById('admin-email').value = '';
+            document.getElementById('admin-email-input').value = '';
+        });
+
+        function editAdmin(email, name) {
+            console.log('Editando administrador:', { email, name });
+            document.getElementById('admin-email').value = email;
+            document.getElementById('admin-name').value = name;
+            document.getElementById('admin-email-input').value = email;
+            document.getElementById('admin-password').value = '';
+        }
+
+        async function deleteAdmin(email) {
+            if (confirm('Tem certeza que deseja excluir este administrador?')) {
+                console.log('Excluindo administrador via AJAX:', email);
+                try {
+                    const response = await fetch(`/api/admins/${email}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    console.log('Resposta do servidor:', data);
+                    if (response.ok) {
+                        showAlert(data.message, 'success');
+                        loadAdmins();
+                    } else {
+                        showAlert(data.message || 'Erro ao excluir administrador.', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir administrador:', error);
+                    showAlert('Erro ao excluir administrador: ' + error.message, 'danger');
+                }
+            }
+        }
+
+        // Chat em Tempo Real
+        socket.on('receive-message', ({ from, to, message, timestamp }) => {
+            console.log('Mensagem recebida:', { from, to, message, timestamp });
+            const messagesDiv = document.getElementById('chat-messages');
+            if (messagesDiv) {
+                const messageElement = document.createElement('div');
+                const formattedTime = new Date(timestamp).toLocaleTimeString();
+                messageElement.textContent = `[${formattedTime}] ${from}${to ? ` para ${to}` : ''}: ${message}`;
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        });
+
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Enviando mensagem de chat...');
+            const socketId = document.getElementById('chat-user').value;
+            const message = document.getElementById('chat-message').value;
+            if (socketId && message) {
+                socket.emit('admin-message', { toSocketId: socketId, message });
+                document.getElementById('chat-message').value = '';
+            } else {
+                showAlert('Selecione um usuário e digite uma mensagem.', 'warning');
+            }
+        });
+
+        // Usuários Online
+        socket.on('online-users', (users) => {
+            console.log('Usuários online recebidos:', users);
+            const tableBody = document.getElementById('online-users-table');
+            const select = document.getElementById('chat-user');
+            if (tableBody && select) {
+                tableBody.innerHTML = '';
+                select.innerHTML = '<option value="">Selecione um usuário</option>';
+                users.forEach(([socketId, user]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><button class="btn btn-primary btn-sm" onclick="selectUser('${socketId}', '${user.email}')">Conversar</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                    const option = document.createElement('option');
+                    option.value = socketId;
+                    option.textContent = `${user.name} (${user.email})`;
+                    select.appendChild(option);
+                });
+            }
+        });
+
+        function selectUser(socketId, email) {
+            console.log('Selecionando usuário para chat:', socketId, email);
+            document.getElementById('chat-user').value = socketId;
+            document.querySelector('#chat-tab').click();
+        }
+
+        // Inicializar página
+        console.log('Inicializando página admin...');
+        loadWelcomeMessage();
+        loadProducts();
+        loadAdmins();
+    </script>
+</body>
+</html>
