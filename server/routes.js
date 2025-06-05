@@ -7,7 +7,7 @@ const multer = require('multer');
 
 // Configura armazenamento de uploads
 const upload = multer({
-  dest: path.join(__dirname, '../public/uploads'),
+  dest: path.join(__dirname, '../public1/uploads'),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
